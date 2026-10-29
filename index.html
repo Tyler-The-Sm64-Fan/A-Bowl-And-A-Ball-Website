@@ -1,220 +1,492 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>A Bowl And A Ball</title>
-		<style>
-html, body, #canvas {
-	margin: 0;
-	padding: 0;
-	border: 0;
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Bowl And A Ball</title>
+<meta name="description" content="A Bowl And A Ball is a cozy 2.5D idle game by Stickman Studios. Drop balls into the bowl, buy upgrades and rebirth. Play free in your browser or download for Windows, Linux and Android.">
+<meta name="theme-color" content="#dfe6f0">
+<meta property="og:title" content="A Bowl And A Ball">
+<meta property="og:description" content="A cozy 2.5D idle game about a bowl, a ball, and a rapidly growing pile of balls. Play in your browser or download it.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="img/cover.png">
+<link rel="icon" type="image/svg+xml" href="img/icon.svg">
+<link rel="apple-touch-icon" href="A Bowl And A Ball.apple-touch-icon.png">
+<style>
+:root {
+  --bg: #f3f6fb;
+  --surface: #ffffff;
+  --surface-2: #e7edf6;
+  --ink: #1b2233;
+  --muted: #5a667c;
+  --line: #d3dbe8;
+  --slate: #9aa6b8;
+  --accent: #2f5fd0;
+  --accent-ink: #ffffff;
+  --accent-soft: #dfe8fb;
+  --shadow: 0 1px 2px rgba(27,34,51,.06), 0 8px 30px rgba(27,34,51,.08);
+  --radius: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e131c;
+    --surface: #161d2a;
+    --surface-2: #1c2536;
+    --ink: #e9eef7;
+    --muted: #9aa7bd;
+    --line: #28334a;
+    --slate: #6f7e98;
+    --accent: #7ba0ff;
+    --accent-ink: #0b1220;
+    --accent-soft: #1d2a4a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 30px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e131c; --surface: #161d2a; --surface-2: #1c2536; --ink: #e9eef7; --muted: #9aa7bd;
+  --line: #28334a; --slate: #6f7e98; --accent: #7ba0ff; --accent-ink: #0b1220; --accent-soft: #1d2a4a;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 30px rgba(0,0,0,.35);
 }
 
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 body {
-	color: white;
-	background-color: black;
-	overflow: hidden;
-	touch-action: none;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+img, svg { max-width: 100%; display: block; }
+a { color: var(--accent); }
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.02em; margin: 0; }
+h2 { font-size: clamp(1.7rem, 3.2vw, 2.3rem); }
+h3 { font-size: 1.15rem; letter-spacing: -0.01em; }
+p { margin: 0 0 1em; }
+.wrap { width: min(1120px, 100% - 32px); margin-inline: auto; }
+.eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+.lead { font-size: 1.2rem; color: var(--muted); max-width: 40ch; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-#canvas {
-	display: block;
+/* ---------- nav ---------- */
+.nav { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 60px; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; letter-spacing: -0.01em; }
+.brand img { width: 30px; height: 30px; border-radius: 8px; }
+.nav nav { display: flex; align-items: center; gap: 6px; }
+.nav nav a { color: var(--muted); text-decoration: none; font-size: .95rem; padding: 8px 12px; border-radius: 999px; }
+.nav nav a:hover { color: var(--ink); background: var(--surface-2); }
+.nav nav a.cta { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.nav nav a.cta:hover { background: var(--accent); filter: brightness(1.08); }
+@media (max-width: 720px) { .nav nav a:not(.cta) { display: none; } }
+
+/* ---------- buttons ---------- */
+.btn { display: inline-flex; align-items: center; gap: 10px; font: inherit; font-weight: 650; padding: 14px 24px; border-radius: 999px; border: 2px solid transparent; text-decoration: none; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease, background .12s ease; }
+.btn:active { transform: translateY(1px); }
+.btn:focus-visible, .nav a:focus-visible, .play-btn:focus-visible, .tool:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent); }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { background: var(--surface-2); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+
+/* ---------- hero ---------- */
+.hero { padding: clamp(40px, 8vw, 96px) 0 clamp(32px, 6vw, 72px); }
+.hero .wrap { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+.hero h1 { font-size: clamp(2.6rem, 6.4vw, 4.6rem); margin-bottom: 20px; }
+.hero h1 span { color: var(--muted); font-weight: 600; }
+.hero .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.hero .meta { margin-top: 18px; font-size: .92rem; color: var(--muted); }
+.hero-art { justify-self: center; width: min(360px, 78%); filter: drop-shadow(0 24px 36px rgba(27,34,51,.18)); }
+.hero-art .tile { fill: #dfe6f0; }
+.hero-art .shape { fill: #fff; stroke: #9aa6b8; stroke-width: 4; stroke-linejoin: round; }
+.ball { transform-origin: 64px 62px; animation: drop 2.6s cubic-bezier(.45,0,.55,1) infinite; }
+@keyframes drop {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-8px); }
+  70% { transform: translateY(-3px); }
 }
+@media (prefers-reduced-motion: reduce) { .ball { animation: none; } html { scroll-behavior: auto; } }
+@media (max-width: 820px) { .hero .wrap { grid-template-columns: 1fr; } .hero-art { order: -1; width: 160px; justify-self: start; } }
 
-#canvas:focus {
-	outline: none;
-}
+/* ---------- sections ---------- */
+section { padding: clamp(48px, 8vw, 96px) 0; }
+.section-head { max-width: 60ch; margin-bottom: 36px; }
+.section-head p { color: var(--muted); margin: 14px 0 0; }
+.alt { background: var(--surface); border-block: 1px solid var(--line); }
 
-#status, #status-splash, #status-progress {
-	position: absolute;
-	left: 0;
-	right: 0;
-}
+/* ---------- game frame ---------- */
+.player { background: #000; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); border: 1px solid var(--line); }
+.stage { position: relative; aspect-ratio: 16 / 9; background: #0b0f17; }
+.stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: none; background: #000; }
+.stage.live iframe { display: block; }
+.poster { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 20px;
+  background: radial-gradient(120% 90% at 50% 0%, #1b2438 0%, #0b0f17 70%); color: #e9eef7; }
+.stage.live .poster { display: none; }
+.poster img { width: clamp(64px, 12vw, 112px); height: auto; aspect-ratio: 1; border-radius: 22%; margin: 0 auto 18px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.poster h3 { font-size: clamp(1.1rem, 2.6vw, 1.6rem); margin-bottom: 6px; }
+.poster p { color: #9aa7bd; font-size: .95rem; margin: 0 0 18px; }
+.play-btn { font: inherit; font-weight: 700; color: #0b1220; background: #dfe6f0; border: 0; border-radius: 999px; padding: 14px 30px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: transform .12s ease, background .12s ease; }
+.play-btn:hover { background: #fff; transform: scale(1.03); }
+.play-btn svg { width: 18px; height: 18px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); }
+.toolbar .hint { margin: 0; }
+.tools { display: flex; gap: 8px; }
+.tool { font: inherit; font-size: .88rem; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+.tool:hover { background: var(--accent-soft); }
+.tool[disabled] { opacity: .45; cursor: default; }
+.note { margin-top: 16px; font-size: .92rem; color: var(--muted); max-width: 72ch; }
 
-#status, #status-splash {
-	top: 0;
-	bottom: 0;
-}
+@media (max-width: 720px) { .stage { aspect-ratio: auto; height: min(70vh, 460px); min-height: 320px; } }
 
-#status {
-	background-color: #000000;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	visibility: hidden;
-}
+/* ---------- features ---------- */
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
+.alt .card { background: var(--bg); }
+.card h3 { margin-bottom: 8px; }
+.card p { color: var(--muted); margin: 0; font-size: .98rem; }
+.card .num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: .9rem; margin-bottom: 14px; }
 
-#status-splash {
-	max-height: 100%;
-	max-width: 100%;
-	margin: auto;
-}
+/* ---------- download ---------- */
+.platforms { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 28px; }
+.platform { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.platform h3 { display: flex; align-items: center; gap: 10px; }
+.platform h3 svg { width: 22px; height: 22px; color: var(--accent); }
+.platform p { margin: 0; color: var(--muted); font-size: .95rem; }
+.platform .req { font-size: .85rem; }
+.download-cta { background: var(--accent-soft); border-radius: var(--radius); padding: clamp(22px, 4vw, 36px); display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; justify-content: space-between; }
+.download-cta h3 { font-size: 1.4rem; margin-bottom: 4px; }
+.download-cta p { margin: 0; color: var(--muted); }
+details { border-top: 1px solid var(--line); padding: 14px 0; }
+details:last-of-type { border-bottom: 1px solid var(--line); }
+summary { cursor: pointer; font-weight: 650; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 1.3rem; line-height: 1; }
+details[open] summary::after { content: "\2212"; }
+details p, details ol { margin: 12px 0 0; color: var(--muted); font-size: .98rem; }
+details ol { padding-left: 1.25em; }
+details li { margin-bottom: 4px; }
+kbd { font: .85em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 1px 6px; }
+.faq { max-width: 760px; margin-top: 40px; }
+.faq > h3 { margin-bottom: 14px; }
 
-#status-splash.show-image--false {
-	display: none;
-}
+/* ---------- privacy ---------- */
+.policy { max-width: 760px; }
+.policy h3 { margin: 32px 0 10px; font-size: 1.2rem; }
+.policy p, .policy li { color: var(--muted); }
+.policy ul { padding-left: 1.2em; margin: 0 0 1em; }
+.policy li { margin-bottom: 6px; }
+.policy strong { color: var(--ink); }
+.policy .updated { font-size: .9rem; margin-bottom: 24px; }
+.policy .summary { background: var(--accent-soft); border-radius: 14px; padding: 18px 22px; color: var(--ink); margin: 0 0 8px; }
+.policy .summary p { margin: 0; color: var(--ink); }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; margin: 8px 0 1em; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--muted); }
+th { color: var(--ink); font-weight: 650; background: var(--surface-2); }
+th:first-child { border-radius: 10px 0 0 0; } th:last-child { border-radius: 0 10px 0 0; }
+.tablewrap { overflow-x: auto; }
 
-#status-splash.fullsize--true {
-	height: 100%;
-	width: 100%;
-	object-fit: contain;
-}
+/* ---------- footer ---------- */
+footer { border-top: 1px solid var(--line); padding: 40px 0 56px; color: var(--muted); font-size: .92rem; }
+footer .wrap { display: grid; gap: 24px; grid-template-columns: 1.4fr 1fr; }
+footer h4 { margin: 0 0 8px; color: var(--ink); font-size: .95rem; }
+footer p { margin: 0 0 .5em; }
+footer ul { list-style: none; padding: 0; margin: 0; }
+footer li { margin-bottom: 4px; }
+@media (max-width: 720px) { footer .wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
 
-#status-splash.use-filter--false {
-	image-rendering: pixelated;
-}
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="img/icon.svg" alt="" width="30" height="30"> A Bowl And A Ball</a>
+    <nav aria-label="Main">
+      <a href="#play">Play</a>
+      <a href="#about">About</a>
+      <a href="#download">Download</a>
+      <a href="#privacy">Privacy</a>
+      <a class="cta" href="https://stickmanstudios.itch.io/a-bowl-and-a-ball" rel="noopener">Download</a>
+    </nav>
+  </div>
+</header>
 
-#status-progress, #status-notice {
-	display: none;
-}
+<main id="top">
 
-#status-progress {
-	bottom: 10%;
-	width: 50%;
-	margin: 0 auto;
-}
+<!-- ================= HERO ================= -->
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">A game by Stickman Studios</p>
+      <h1>A Bowl <span>and</span> a Ball</h1>
+      <p class="lead">A cozy 2.5D idle game. Drop a ball into the bowl, earn money, buy upgrades and watch the pile grow.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="#play">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          Play in your browser
+        </a>
+        <a class="btn btn-ghost" href="https://stickmanstudios.itch.io/a-bowl-and-a-ball" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+          Download on itch.io
+        </a>
+      </div>
+      <p class="meta">Free. Windows, Linux, Android and web.</p>
+    </div>
+    <svg class="hero-art" viewBox="0 0 128 128" role="img" aria-label="A ball resting above a bowl">
+      <rect class="tile" width="128" height="128" rx="24"/>
+      <circle class="shape ball" cx="64" cy="48" r="20"/>
+      <path class="shape" d="M20 62 A44 44 0 0 0 108 62 Z"/>
+    </svg>
+  </div>
+</div>
 
-#status-notice {
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
-	text-align: center;
-	z-index: 1;
-}
-		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="A Bowl And A Ball.icon.png" />
-<link rel="apple-touch-icon" href="A Bowl And A Ball.apple-touch-icon.png"/>
+<!-- ================= PLAY ================= -->
+<section id="play" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Web version</p>
+      <h2>Play it right here</h2>
+      <p>No install needed. Your progress is saved in this browser.</p>
+    </div>
 
-	</head>
-	<body>
-		<canvas id="canvas">
-			Your browser does not support the canvas tag.
-		</canvas>
+    <div class="player">
+      <div class="stage" id="stage">
+        <div class="poster">
+          <div>
+            <img src="img/icon-512.png" alt="" width="112" height="112">
+            <h3>A Bowl And A Ball</h3>
+            <p>Click to load the game (about 10 MB).</p>
+            <button class="play-btn" id="playBtn" type="button">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              Play now
+            </button>
+          </div>
+        </div>
+        <iframe id="frame" title="A Bowl And A Ball" allow="fullscreen; autoplay; gamepad" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="toolbar">
+        <p class="hint"><kbd>Space</kbd> to drop a ball, <kbd>1</kbd>-<kbd>9</kbd> to buy upgrades. Controllers work too.</p>
+        <div class="tools">
+          <button class="tool" id="fsBtn" type="button" disabled>Fullscreen</button>
+          <button class="tool" id="reloadBtn" type="button" disabled>Restart</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">The web version runs best on a desktop browser. For the smoothest play, the recorder, and a phone-friendly layout, get the Android or desktop build from itch.io.</p>
+  </div>
+</section>
 
-		<noscript>
-			Your browser does not support JavaScript.
-		</noscript>
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">About the game</p>
+      <h2>One bowl. Hundreds of balls.</h2>
+      <p>Balls tumble around the bowl in real 3D physics while the money rolls in, even while you are away.</p>
+    </div>
+    <div class="grid">
+      <article class="card"><div class="num">1</div><h3>Satisfying physics</h3><p>Up to hundreds of balls rolling, bouncing and piling up, tuned to stay smooth on phones.</p></article>
+      <article class="card"><div class="num">2</div><h3>16 upgrades</h3><p>Auto spawners, Golden Ball, Combo Click, Offline Earnings, Head Start, ball colors, bowl themes and more.</p></article>
+      <article class="card"><div class="num">3</div><h3>Rebirth</h3><p>Reset your progress for a permanent bonus, then climb again, faster this time.</p></article>
+      <article class="card"><div class="num">4</div><h3>Offline earnings</h3><p>Your bowl keeps working while you are gone. The game saves automatically.</p></article>
+      <article class="card"><div class="num">5</div><h3>Built-in recorder</h3><p>Capture your bowl with game audio, with a choice of frame rate and quality (desktop and Android builds).</p></article>
+      <article class="card"><div class="num">6</div><h3>Made to run well</h3><p>60 Hz and high refresh rate support, graphics presets, HDR on Windows, controller and touch support.</p></article>
+    </div>
+  </div>
+</section>
 
-		<div id="status">
-			<img id="status-splash" class="show-image--false fullsize--true use-filter--true" src="A Bowl And A Ball.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-notice"></div>
-		</div>
+<!-- ================= DOWNLOAD ================= -->
+<section id="download" class="alt">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Download</p>
+      <h2>Take it with you</h2>
+      <p>All builds are free on itch.io. Pick your platform on the download page.</p>
+    </div>
 
-		<script src="A Bowl And A Ball.js"></script>
-		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"A Bowl And A Ball","experimentalVK":false,"fileSizes":{"A Bowl And A Ball.pck":2184288,"A Bowl And A Ball.wasm":1509558},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
-const GODOT_THREADS_ENABLED = false;
-const engine = new Engine(GODOT_CONFIG);
+    <div class="platforms">
+      <div class="platform">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5l8-1.1v7.1H3zM12 4.3l9-1.3v8.5h-9zM3 12.5h8v7.1l-8-1.1zM12 12.5h9V21l-9-1.3z"/></svg>
+          Windows
+        </h3>
+        <p>Extract the zip and run the game. HDR output is supported.</p>
+        <p class="req">Windows 10 or newer, 64-bit</p>
+      </div>
+      <div class="platform">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          Linux
+        </h3>
+        <p>Extract, mark the file as executable and run it.</p>
+        <p class="req">64-bit distro with Vulkan drivers</p>
+      </div>
+      <div class="platform">
+        <h3>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>
+          Android
+        </h3>
+        <p>Download the APK and allow installs from your browser or file manager.</p>
+        <p class="req">Android 10 or newer</p>
+      </div>
+    </div>
 
+    <div class="download-cta">
+      <div>
+        <h3>Get A Bowl And A Ball</h3>
+        <p>Free download from the Stickman Studios page on itch.io.</p>
+      </div>
+      <a class="btn btn-primary" href="https://stickmanstudios.itch.io/a-bowl-and-a-ball" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
+        Download on itch.io
+      </a>
+    </div>
+
+    <div class="faq">
+      <h3>Install help</h3>
+      <details>
+        <summary>Windows</summary>
+        <ol>
+          <li>Download the Windows zip, right-click it and choose <strong>Extract All</strong>.</li>
+          <li>Open the folder and double-click <strong>A Bowl And A Ball.exe</strong>.</li>
+          <li>If SmartScreen says &ldquo;Windows protected your PC&rdquo;, click <strong>More info</strong>, then <strong>Run anyway</strong>. This appears for games from small developers that are not code-signed.</li>
+          <li>For HDR, turn on HDR in Windows (<kbd>Win</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd>) and tick <strong>HDR output</strong> in the game settings.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Linux</summary>
+        <ol>
+          <li>Download and extract the Linux zip.</li>
+          <li>Make the game file executable: right-click it, Properties, Permissions, &ldquo;Allow executing&rdquo;, or run <kbd>chmod +x</kbd> on it.</li>
+          <li>Double-click it, or start it from a terminal.</li>
+          <li>You need Vulkan graphics drivers (Mesa for AMD and Intel, the NVIDIA driver for NVIDIA) and PulseAudio or PipeWire.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Android</summary>
+        <ol>
+          <li>Download the APK on your phone, or copy it there from a computer.</li>
+          <li>Open the file. If asked, allow <strong>Install unknown apps</strong> for your browser or file manager, then tap <strong>Install</strong>.</li>
+          <li>If Play Protect warns about an unknown app, tap <strong>Install anyway</strong>.</li>
+          <li>The first time you record, Android asks for <strong>All files access</strong> so videos can be saved to a <strong>recordings</strong> folder. The game works without it, but recordings cannot be saved.</li>
+        </ol>
+      </details>
+      <details>
+        <summary>Controls</summary>
+        <p><strong>Mouse or touch:</strong> click or tap SPAWN BALL. <strong>Keyboard:</strong> <kbd>Space</kbd> or <kbd>Enter</kbd> to spawn, <kbd>1</kbd>-<kbd>9</kbd> and <kbd>0</kbd> to buy, <kbd>Esc</kbd> for settings, <kbd>F9</kbd> to record, <kbd>F11</kbd> for fullscreen. <strong>Controller:</strong> A to spawn, Start for settings, B to go back.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRIVACY ================= -->
+<section id="privacy">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Legal</p>
+      <h2>Privacy Policy</h2>
+    </div>
+
+    <div class="policy">
+      <p class="updated">Last updated: October 29, 2026. Applies to the game &ldquo;A Bowl And A Ball&rdquo; (Windows, Linux, Android and web versions) and this website, published by Stickman Studios.</p>
+
+      <div class="summary"><p><strong>In short:</strong> we do not collect your personal data. The game has no accounts, no ads, no analytics and does not send anything over the internet. Your progress and settings stay on your own device.</p></div>
+
+      <h3>1. Information we collect</h3>
+      <p>None. We do not ask for your name, email address, location, contacts or any other personal information, and we do not use advertising IDs, analytics or tracking tools.</p>
+
+      <h3>2. Information stored on your device</h3>
+      <p>The game keeps a few small files on your device so it can remember you. They never leave your device unless you copy them yourself.</p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>What</th><th>Why</th><th>Where</th></tr></thead>
+          <tbody>
+            <tr><td>Settings (graphics, audio, controls)</td><td>So your choices are remembered</td><td>Game data folder on desktop and Android; browser storage in the web version</td></tr>
+            <tr><td>Save file and backup (money, upgrades, rebirths, play time)</td><td>So you can continue later and earn offline income</td><td>Same as above</td></tr>
+            <tr><td>Recordings you make</td><td>Videos you choose to record</td><td>A <strong>recordings</strong> folder on your device (desktop and Android only)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>You can delete your save at any time with <strong>Settings, Reset progress</strong>, by uninstalling the game, or (web version) by clearing this site&rsquo;s data in your browser.</p>
+
+      <h3>3. Permissions on Android</h3>
+      <ul>
+        <li><strong>All files access</strong> is requested only so the built-in recorder can save videos to a plain <strong>recordings</strong> folder. The game does not read, scan or upload your other files.</li>
+        <li><strong>Vibration</strong> is used for touch haptics, which you can turn off in the settings.</li>
+      </ul>
+      <p>The recorder captures only the game&rsquo;s own picture and sound. It does not use your microphone or camera.</p>
+
+      <h3>4. Sharing</h3>
+      <p>Because we do not collect your data, we have nothing to sell, rent or share. The game makes no network connections to us or to anyone else while you play.</p>
+
+      <h3>5. This website</h3>
+      <p>This website does not use cookies, analytics, advertising or third-party scripts and fonts. The web version of the game is hosted here and runs entirely in your browser. Like most web servers, the company that hosts this site may keep standard technical logs (such as IP address and time of request) for security and operation; we do not use them to identify you.</p>
+
+      <h3>6. Downloads and third-party services</h3>
+      <p>The game is distributed on <a href="https://stickmanstudios.itch.io/a-bowl-and-a-ball" rel="noopener">itch.io</a>. When you visit or download from itch.io, that service&rsquo;s own terms and <a href="https://itch.io/docs/legal/privacy-policy" rel="noopener">privacy policy</a> apply. We do not receive personal information about you from itch.io.</p>
+
+      <h3>7. Children</h3>
+      <p>Because we collect no personal data from anyone, we do not knowingly collect personal data from children. The game contains no ads, no chat and no purchases.</p>
+
+      <h3>8. Changes to this policy</h3>
+      <p>If we change how the game or website handles data, we will update this page and the date above.</p>
+
+      <h3>9. Contact</h3>
+      <p>Questions about this policy? Reach Stickman Studios through the comments on the <a href="https://stickmanstudios.itch.io/a-bowl-and-a-ball" rel="noopener">itch.io page</a>.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <h4>A Bowl And A Ball</h4>
+      <p>&copy; 2026 Stickman Studios. All rights reserved.</p>
+      <p>Built with <a href="https://godotengine.org" rel="noopener">Godot Engine</a>, which is free software under the MIT license.</p>
+    </div>
+    <div>
+      <h4>Credits</h4>
+      <ul>
+        <li>Game by Stickman Studios</li>
+        <li>Music: &ldquo;Lofi Loop&rdquo; by <a href="https://pixabay.com/music/beats-lofi-loop-589689/" rel="noopener">ZephiraMusic</a> via Pixabay</li>
+        <li><a href="#privacy">Privacy Policy</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+<script>
 (function () {
-	const statusOverlay = document.getElementById('status');
-	const statusProgress = document.getElementById('status-progress');
-	const statusNotice = document.getElementById('status-notice');
+  var stage = document.getElementById('stage');
+  var frame = document.getElementById('frame');
+  var playBtn = document.getElementById('playBtn');
+  var fsBtn = document.getElementById('fsBtn');
+  var reloadBtn = document.getElementById('reloadBtn');
+  var GAME_URL = 'A%20Bowl%20And%20A%20Ball.html';
 
-	let initializing = true;
-	let statusMode = '';
+  function start() {
+    // Loading on click keeps the page fast and lets the browser allow game audio.
+    frame.src = GAME_URL;
+    stage.classList.add('live');
+    fsBtn.disabled = false;
+    reloadBtn.disabled = false;
+    frame.focus();
+  }
+  playBtn.addEventListener('click', start);
 
-	function setStatusMode(mode) {
-		if (statusMode === mode || !initializing) {
-			return;
-		}
-		if (mode === 'hidden') {
-			statusOverlay.remove();
-			initializing = false;
-			return;
-		}
-		statusOverlay.style.visibility = 'visible';
-		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
-		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
-		statusMode = mode;
-	}
+  fsBtn.addEventListener('click', function () {
+    var el = stage;
+    var req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (req) { req.call(el); }
+  });
 
-	function setStatusNotice(text) {
-		while (statusNotice.lastChild) {
-			statusNotice.removeChild(statusNotice.lastChild);
-		}
-		const lines = text.split('\n');
-		lines.forEach((line) => {
-			statusNotice.appendChild(document.createTextNode(line));
-			statusNotice.appendChild(document.createElement('br'));
-		});
-	}
-
-	function displayFailureNotice(err) {
-		console.error(err);
-		if (err instanceof Error) {
-			setStatusNotice(err.message);
-		} else if (typeof err === 'string') {
-			setStatusNotice(err);
-		} else {
-			setStatusNotice('An unknown error occurred.');
-		}
-		setStatusMode('notice');
-		initializing = false;
-	}
-
-	const missing = Engine.getMissingFeatures({
-		threads: GODOT_THREADS_ENABLED,
-	});
-
-	if (missing.length !== 0) {
-		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
-			let serviceWorkerRegistrationPromise;
-			try {
-				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
-			} catch (err) {
-				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
-			}
-			// There's a chance that installing the service worker would fix the issue
-			Promise.race([
-				serviceWorkerRegistrationPromise.then((registration) => {
-					if (registration != null) {
-						return Promise.reject(new Error('Service worker already exists.'));
-					}
-					return registration;
-				}).then(() => engine.installServiceWorker()),
-				// For some reason, `getRegistration()` can stall
-				new Promise((resolve) => {
-					setTimeout(() => resolve(), 2000);
-				}),
-			]).then(() => {
-				// Reload if there was no error.
-				window.location.reload();
-			}).catch((err) => {
-				console.error('Error while registering service worker:', err);
-			});
-		} else {
-			// Display the message as usual
-			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
-			displayFailureNotice(missingMsg + missing.join('\n'));
-		}
-	} else {
-		setStatusMode('progress');
-		engine.startGame({
-			'onProgress': function (current, total) {
-				if (current > 0 && total > 0) {
-					statusProgress.value = current;
-					statusProgress.max = total;
-				} else {
-					statusProgress.removeAttribute('value');
-					statusProgress.removeAttribute('max');
-				}
-			},
-		}).then(() => {
-			setStatusMode('hidden');
-		}, displayFailureNotice);
-	}
-}());
-		</script>
-	</body>
+  reloadBtn.addEventListener('click', function () {
+    frame.src = 'about:blank';
+    setTimeout(function () { frame.src = GAME_URL; }, 50);
+  });
+})();
+</script>
+</body>
 </html>
-
